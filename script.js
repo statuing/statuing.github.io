@@ -1,23 +1,18 @@
 const musicContainer = document.getElementById('music-container');
 const playBtn = document.getElementById('play');
-//const prevBtn = document.getElementById('prev');
-//const nextBtn = document.getElementById('next');
 
 const audio = document.getElementById('audio');
-const progress = document.getElementById('progress');
-const progressContainer = document.getElementById('progress-container');
 const title = document.getElementById('title');
-const cover = document.getElementById('cover');
-const currTime = document.querySelector('#currTime');
-const durTime = document.querySelector('#durTime');
+const statuefreq = document.getElementById('statue-freq-range');
+const statueoverfreq = document.getElementById('statue-over-freq-range');
 
-
-const maxShortWaitIntrvlFactor = 1.5;//10;	//at max ten minutes - 15 mins
-const minLongWaitIntrvlFactor = 30;	//atleast 30 minutes - sixty minutes 
+var maxShortWaitIntrvlFactor = 1;//10;	//at max ten minutes - 15 mins
+var minLongWaitIntrvlFactor = 60;	//atleast 30 minutes - sixty minutes 
 
 let timerid = 0;
 
 const aMinMillisecs = 1000 * 60;	//a minute millisecs 
+const aHourMins = 60;
 
 // Song titles
 const songs = ['statue','bell'];//['hey', 'summer', 'ukulele'];
@@ -34,44 +29,43 @@ loadSong(songs[songIndex]);
 function loadSong(song) {
   title.innerText = song;
   audio.src = `music/${song}.aac`;
-  cover.src = `images/${song}.jpg`;
 }
 
 // Play song
 function playSong() {
-  /*musicContainer.classList.add('play');
-  playBtn.querySelector('i.fas').classList.remove('fa-play');
-  playBtn.querySelector('i.fas').classList.add('fa-pause');*/
 
   audio.play();
 }
 
 // Play song
-function startSong(twhentoplay=60000*randomWaitInterval(minLongWaitIntrvlFactor, true)) {
+function startSong() {
   musicContainer.classList.add('play');
-  playBtn.querySelector('i.fas').classList.remove('fa-play');
-  playBtn.querySelector('i.fas').classList.add('fa-stop');
-  //songIndex = 0;
-  //loadSong(songs[songIndex]);
+  //playBtn.querySelector('i.fas').classList.remove('fa-play');
+  //playBtn.querySelector('i.fas').classList.add('fa-stop');
+
+  let twhentoplay = aMinMillisecs * randomWaitInterval(minLongWaitIntrvlFactor); 
   timerid = setTimeout(playSong, twhentoplay);
   let now = new Date();
-  now.setMinutes(now.getMinutes()+(twhentoplay/60000));
+  now.setMilliseconds(now.getMilliseconds()+twhentoplay);
   console.log("new timer "+ timerid.toString() + " at " + now.toString() + " is set to run.");
 }
 
-// Pause song
-function pauseSong() {
-  musicContainer.classList.remove('play');
-  playBtn.querySelector('i.fas').classList.add('fa-play');
-  playBtn.querySelector('i.fas').classList.remove('fa-pause');
+function refresh()
+{
+	const isChecked = playBtn.checked;//musicContainer.classList.contains('play');
 
-  audio.pause();
+	if (isChecked) {
+		stopSong();
+		songIndex = 0;
+		loadSong(songs[songIndex]);
+		startSong();
+	}
 }
 
 function stopSong(){
 	musicContainer.classList.remove('play');
-	playBtn.querySelector('i.fas').classList.add('fa-play');
-	playBtn.querySelector('i.fas').classList.remove('fa-stop');
+	//playBtn.querySelector('i.fas').classList.add('fa-play');
+	//playBtn.querySelector('i.fas').classList.remove('fa-stop');
 
 	if (timerid != 0)
 	{
@@ -85,45 +79,31 @@ function stopSong(){
 	//audio.load();
 }
 
-// Previous song
-function prevSong() {
-  songIndex--;
-
-  if (songIndex < 0) {
-    songIndex = songs.length - 1;
-  }
-
-  loadSong(songs[songIndex]);
-
-  playSong();
-}
-
-// Next song
-function nextSong() {
-  songIndex++;
-
-  if (songIndex > songs.length - 1) {
-    songIndex = 0;
-  }
-
-  loadSong(songs[songIndex]);
-
-  playSong();
-}
-
-function randomWaitInterval(intervalRangeMins = 10,bWaitAtleast=false)
+function onStatueFreqChanged()
 {
-	let extendedRangeFactor = 0;
-	if (bWaitAtleast == true)
-	{
-		extendedRangeFactor = intervalRangeMins;
-	}
-	return extendedRangeFactor + (Math.floor(Math.random()*intervalRangeMins));
+	minLongWaitIntrvlFactor = aHourMins * document.getElementById("statue-freq-range").value;
+	console.log("onStatueFreqChanged():minLongWaitIntrvlFactor:"+ minLongWaitIntrvlFactor);
+	refresh();
+}
+
+function onStatueOverTimingUpdate()
+{
+	maxShortWaitIntrvlFactor = document.getElementById("statue-over-freq-range").value;
+	console.log("onStatueOverTimingUpdate():maxShortWaitIntrvlFactor:" + maxShortWaitIntrvlFactor);
+}
+
+function randomWaitInterval(intervalRangeMins = 10)
+{
+	let randomizedNum = 0;
+
+	randomizedNum = (Math.random()*(intervalRangeMins-1)+1);
+	console.log("randomWaitInterval(in mins):"+ randomizedNum);
+	return randomizedNum;
 }
 
 function nextAction1()
 {
-	let waittime = 30000 * randomWaitInterval(maxShortWaitIntrvlFactor);
+	let waittime = (aMinMillisecs/2) * randomWaitInterval(maxShortWaitIntrvlFactor);
 
 	songIndex++;
 
@@ -132,14 +112,12 @@ function nextAction1()
 	if (songIndex > songs.length - 1)
 	{
 		songIndex = 0;
-		waittime = aMinMillisecs * randomWaitInterval(minLongWaitIntrvlFactor, true);
+		waittime = aMinMillisecs * randomWaitInterval(minLongWaitIntrvlFactor);
 	}
 
-	pldt.setMinutes(pldt.getMinutes()+(waittime/aMinMillisecs));
+	console.log("Current time :"+pldt.toString());
 
-	//musicContainer.classList.remove('play');
-	//playBtn.querySelector('i.fas').classList.add('fa-play');
-	//playBtn.querySelector('i.fas').classList.remove('fa-pause');
+	pldt.setMinutes(pldt.getMinutes()+(waittime/aMinMillisecs));
 
 	loadSong(songs[songIndex]);
 
@@ -155,116 +133,25 @@ function nextAction1()
 	console.log("new timer "+ timerid.toString() + " with waittime " + waittime.toString() + " is set to run.");
 }
 
-// Update progress bar
-function updateProgress(e) {
-  const { duration, currentTime } = e.srcElement;
-  const progressPercent = (currentTime / duration) * 100;
-  progress.style.width = `${progressPercent}%`;
-}
-
-// Set progress bar
-function setProgress(e) {
-  const width = this.clientWidth;
-  const clickX = e.offsetX;
-  const duration = audio.duration;
-
-  audio.currentTime = (clickX / width) * duration;
-}
-
-//get duration & currentTime for Time of song
-function DurTime (e) {
-	const {duration,currentTime} = e.srcElement;
-	var sec;
-	var sec_d;
-
-	// define minutes currentTime
-	let min = (currentTime==null)? 0:
-	 Math.floor(currentTime/60);
-	 min = min <10 ? '0'+min:min;
-
-	// define seconds currentTime
-	function get_sec (x) {
-		if(Math.floor(x) >= 60){
-			
-			for (var i = 1; i<=60; i++){
-				if(Math.floor(x)>=(60*i) && Math.floor(x)<(60*(i+1))) {
-					sec = Math.floor(x) - (60*i);
-					sec = sec <10 ? '0'+sec:sec;
-				}
-			}
-		}else{
-		 	sec = Math.floor(x);
-		 	sec = sec <10 ? '0'+sec:sec;
-		 }
-	} 
-
-	get_sec (currentTime,sec);
-
-	// change currentTime DOM
-	//currTime.innerHTML = min +':'+ sec;
-
-	// define minutes duration
-	let min_d = (isNaN(duration) === true)? '0':
-		Math.floor(duration/60);
-	 min_d = min_d <10 ? '0'+min_d:min_d;
-
-
-	 function get_sec_d (x) {
-		if(Math.floor(x) >= 60){
-			
-			for (var i = 1; i<=60; i++){
-				if(Math.floor(x)>=(60*i) && Math.floor(x)<(60*(i+1))) {
-					sec_d = Math.floor(x) - (60*i);
-					sec_d = sec_d <10 ? '0'+sec_d:sec_d;
-				}
-			}
-		}else{
-		 	sec_d = (isNaN(duration) === true)? '0':
-		 	Math.floor(x);
-		 	sec_d = sec_d <10 ? '0'+sec_d:sec_d;
-		 }
-	} 
-
-	// define seconds duration
-	
-	get_sec_d (duration);
-
-	// change duration DOM
-	//durTime.innerHTML = min_d +':'+ sec_d;
-		
-};
-
 // Event listeners
 playBtn.addEventListener('click', () => {
-  const isPlaying = musicContainer.classList.contains('play');
+  //const isChecked = musicContainer.classList.contains('play');
+  const isChecked = playBtn.checked;
 
-  if (isPlaying) {
-    stopSong();
-  } else {
-  	songIndex = 0;
+  if (isChecked) {
+    songIndex = 0;
   	loadSong(songs[songIndex]);
     startSong();
+  } else {
+  	stopSong();
   }
 });
-
-function onLoad(){
-	// I guess player is loaded
-	console.log('onLoad called');
-	setTimeout(playSong,5000);
-}
-
-// Change song
-//prevBtn.addEventListener('click', prevSong);
-//nextBtn.addEventListener('click', nextSong);
-
-// Time/song update
-audio.addEventListener('timeupdate', updateProgress);
-
-// Click on progress bar
-//progressContainer.addEventListener('click', setProgress);
 
 // Song ends
 audio.addEventListener('ended', nextAction1);
 
-// Time of song
-audio.addEventListener('timeupdate',DurTime);
+// Statue repeat freq
+statuefreq.addEventListener('change', onStatueFreqChanged);
+
+// statue over timing
+statueoverfreq.addEventListener('change', onStatueOverTimingUpdate);
